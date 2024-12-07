@@ -20,6 +20,28 @@ private:
         out << pixel.x << ' ' << pixel.y << ' ' << pixel.z << '\n';
     }
 
+    vec3f gammaCorrect(const vec3f &color)
+    {
+        auto _correct = [](float c) -> float
+        {
+            return (c > 0) ? std::sqrt(c) : c;
+        };
+
+        return vec3f(_correct(color.x), _correct(color.y), _correct(color.z));
+    }
+
+    vec3f clampColor(const vec3f &color, float low, float high)
+    {
+        auto _clamp = [&](float c) -> float
+        {
+            if(c < low) return low;
+            if(c > high) return high;
+            return c;
+        };
+
+        return vec3f(_clamp(color.x), _clamp(color.y), _clamp(color.z));
+    }
+
 public:
 
     FrameBuffer(int width, int height) : width(width), height(height), m_buffer(std::make_unique<std::vector<vec3i>>(std::vector<vec3i>(width * height)))
@@ -29,9 +51,11 @@ public:
 
     void setPixel(const vec3f &color, int pixel_x, int pixel_y)
     {
-        auto red = static_cast<int>(255.999 * color.x);
-        auto green = static_cast<int>(255.999 * color.y);
-        auto blue = static_cast<int>(255.999 * color.z);
+        vec3f correctedColor = clampColor(gammaCorrect(color), 0.0, 1.0);
+
+        auto red = static_cast<int>(std::round(255.0 * correctedColor.x));
+        auto green = static_cast<int>(std::round(255.0 * correctedColor.y));
+        auto blue = static_cast<int>(std::round(255.0 * correctedColor.z));
 
         (*m_buffer)[pixel_y * width + pixel_x] = vec3i(red, green, blue);
     }

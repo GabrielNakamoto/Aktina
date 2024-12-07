@@ -137,16 +137,14 @@ private:
             // contribute more, therefore we should send
             // more rays in that direction
             vec3f direction = hitInfo->normal + randomUnitVector();
+            // absorbs 50% the energy
             return 0.5 * shade(Ray(hitInfo->point, direction), depth - 1, scene);
         }
 
         float a = 0.5 * (r.direction.y + 1.0);
 
         // lerp
-        return [&]
-        {
-            return (1.0 - a) * vec3f(1.0) + a * vec3f(0.5, 0.7, 1.0);
-        }();
+        return (1.0 - a) * vec3f(1.0) + a * vec3f(0.5, 0.7, 1.0);
     }
 };
 
