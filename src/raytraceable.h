@@ -4,8 +4,8 @@
 #include <iostream>
 
 #include "common.h"
-
-
+#include "vec3.h"
+#include "ray.h"
 
 
 class RayTraceable
@@ -63,7 +63,7 @@ public:
 
         auto discriminant = h*h - a*c;
 
-        if(discriminant < 0) return { };
+        if(discriminant < 0) return std::nullopt;
 
         discriminant = std::sqrt(discriminant);
 
@@ -73,7 +73,7 @@ public:
             // check other point
             t = (h + discriminant) / a;
             if(t <= tMin || t >= tMax)
-                return { };
+                return std::nullopt;
         }
 
         hitInfo.t = t;

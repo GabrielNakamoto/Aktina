@@ -46,7 +46,7 @@ public:
             }
         }
 
-        if(! intersection) return { };
+        if(! intersection) return std::nullopt;
 
         return hitInfo;
     }

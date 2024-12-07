@@ -3,8 +3,11 @@
 
 #include <iostream>
 #include <optional>
+#include <cstdlib>
 #include <memory>
 #include <cmath>
+
+#include "vec3.h"
 
 using std::shared_ptr;
 using std::make_shared;
@@ -17,7 +20,32 @@ inline float toRadians(float degrees)
     return degrees * pi / 180.0;
 }
 
-#include "vec3.h"
-#include "ray.h"
+inline float randomFloat()
+{
+    return std::rand() / (RAND_MAX + 1.0);
+}
+
+inline float randomFloat(float min, float max)
+{
+    return min + (max - min)*randomFloat();
+}
+
+inline vec3f randomUnitVector()
+{
+    while (true)
+    {
+        auto p = vec3f(randomFloat(-1, 1), randomFloat(-1, 1), randomFloat(-1, 1));
+        auto ls = dot(p,p);
+        if(1e-36 < ls && ls <= 1)
+            return p.normalize();
+    }
+}
+
+inline vec3f randomOnHemisphere(const vec3f &normal)
+{
+    auto v = randomUnitVector();
+    return dot(v, normal) > 0 ? v : -v;
+}
+
 
 #endif

@@ -130,6 +130,7 @@ inline vec3<T> normalized(const vec3<T> &v)
     return (ret *= inv_len);
 }
 
+
 typedef vec3<float> vec3f;
 typedef vec3<int> vec3i;
 

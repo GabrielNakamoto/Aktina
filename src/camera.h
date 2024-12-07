@@ -11,6 +11,10 @@ protected:
 
     int imageWidth, imageHeight;
 
+    int samplesPerPixel;
+
+    int maxDepth;
+
     FrameBuffer m_buffer;
 
     float aspectRatio;
@@ -22,6 +26,11 @@ protected:
     vec3f pixelDeltaRight, pixelDeltaDown;
 
 public:
+
+    virtual ~CameraBase()
+    {
+
+    }
 
     CameraBase(int imageWidth, float aspectRatio) :
         imageWidth{ imageWidth },
@@ -36,13 +45,20 @@ public:
     {
         initialize();
 
+        float sampleWeight = 1.0 / samplesPerPixel;
+
         for (int pixelY = 0; pixelY < imageHeight; ++pixelY)
         {
             for (int pixelX = 0; pixelX < imageWidth; ++pixelX)
             {
-                vec3f pixelColor = shade(getRay(pixelX, pixelY), scene);
+                vec3f pixelColor(0.0);
 
-                m_buffer.setPixel(pixelColor, pixelX, pixelY);
+                for (int sample = 0; sample < samplesPerPixel; ++sample)
+                {
+                    pixelColor  += shade(getRay(pixelX, pixelY), maxDepth, scene);
+                }
+
+                m_buffer.setPixel(pixelColor * sampleWeight, pixelX, pixelY);
             }
         }
 
@@ -52,15 +68,23 @@ public:
 private:
 
     virtual void initialize() = 0;
-    virtual vec3f shade(const Ray &r, const Scene &scene) const = 0;
+    virtual vec3f shade(const Ray &r, int detph, const Scene &scene) const = 0;
 
     Ray getRay(int pixelX, int pixelY)
     {
-        vec3f direction = originPixel + (pixelX * pixelDeltaRight) + (pixelY * pixelDeltaDown);
+        vec3f sample = this->sample();
+
+        vec3f direction = originPixel + ((pixelX + sample.x) * pixelDeltaRight) + ((pixelY + sample.y) * pixelDeltaDown);
         // make direction go from camera position out
         direction = direction - this->position;
 
         return Ray(this->position, direction);
+    }
+
+    vec3f sample() const
+    {
+        // -0.5 -> 0.5
+        return vec3f(randomFloat() - 0.5, randomFloat() - 0.5, 0);
     }
 };
 
@@ -80,6 +104,10 @@ private:
     {
         focalLength = 1.0;
 
+        samplesPerPixel = 10;
+
+        maxDepth = 10;
+
         viewportHeight = 2.0;
         viewportWidth = viewportHeight * static_cast<float>(imageWidth) / imageHeight;
 
@@ -95,11 +123,16 @@ private:
         originPixel += 0.5 * (pixelDeltaRight + pixelDeltaDown);
     }
 
-    vec3f shade(const Ray &r, const Scene &scene) const
+    vec3f shade(const Ray &r, int depth, const Scene &scene) const
     {
-        if (auto hitInfo = scene.trace(r, 0, infinity))
+        if(depth <= 0)
+            return vec3f(0.0);
+
+        // ignore rays that are very close to surface
+        if (auto hitInfo = scene.trace(r, 0.001, infinity))
         {
-            return 0.5 * (hitInfo.value().normal + vec3f(1.0));
+            vec3f direction = randomOnHemisphere(hitInfo->normal);
+            return 0.5 * shade(Ray(hitInfo->point, direction), depth - 1, scene);
         }
 
         float a = 0.5 * (r.direction.y + 1.0);
