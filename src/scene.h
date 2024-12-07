@@ -29,7 +29,7 @@ public:
         objects.push_back(object);
     }
 
-    std::optional<RayTraceable::Hit> trace(const Ray &r, float tMin, float tMax) const
+    [[nodiscard]] std::optional<RayTraceable::Hit> trace(const Ray &r, float tMin, float tMax) const
     {
         RayTraceable::Hit hitInfo;
 

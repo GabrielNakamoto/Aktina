@@ -41,7 +41,7 @@ public:
 
     }
 
-    void render(const Scene &scene)
+    void render(const Scene &scene, const std::string &filename)
     {
         initialize();
 
@@ -62,7 +62,7 @@ public:
             }
         }
 
-        m_buffer.writeToPPM("./out.ppm");
+        m_buffer.writeToPPM(filename);
     }
 
 private:
@@ -70,7 +70,7 @@ private:
     virtual void initialize() = 0;
     virtual vec3f shade(const Ray &r, int detph, const Scene &scene) const = 0;
 
-    Ray getRay(int pixelX, int pixelY)
+    [[nodiscard]] Ray getRay(int pixelX, int pixelY) const
     {
         vec3f sample = this->sample();
 
@@ -81,7 +81,7 @@ private:
         return Ray(this->position, direction);
     }
 
-    vec3f sample() const
+    [[nodiscard]] vec3f sample() const
     {
         // -0.5 -> 0.5
         return vec3f(randomFloat() - 0.5, randomFloat() - 0.5, 0);
@@ -93,7 +93,8 @@ class Camera : public CameraBase
 {
 public:
 
-    Camera(int imageWidth, float aspectRatio) : CameraBase(imageWidth, aspectRatio)
+    Camera(int imageWidth, float aspectRatio) :
+        CameraBase(imageWidth, aspectRatio)
     {
 
     }
@@ -123,15 +124,19 @@ private:
         originPixel += 0.5 * (pixelDeltaRight + pixelDeltaDown);
     }
 
-    vec3f shade(const Ray &r, int depth, const Scene &scene) const
+    [[nodiscard]] vec3f shade(const Ray &r, int depth, const Scene &scene) const
     {
-        if(depth <= 0)
+        if (depth <= 0)
             return vec3f(0.0);
 
         // ignore rays that are very close to surface
         if (auto hitInfo = scene.trace(r, 0.001, infinity))
         {
-            vec3f direction = randomOnHemisphere(hitInfo->normal);
+            // cosine weighted ray distribution
+            // light rays closer to parallel to the normal
+            // contribute more, therefore we should send
+            // more rays in that direction
+            vec3f direction = hitInfo->normal + randomUnitVector();
             return 0.5 * shade(Ray(hitInfo->point, direction), depth - 1, scene);
         }
 

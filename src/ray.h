@@ -18,7 +18,7 @@ struct Ray
 
     }
 
-    vec3f at(float t) const
+    [[nodiscard]] vec3f at(float t) const
     {
         return origin + t * direction;
     }

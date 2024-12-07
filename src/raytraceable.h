@@ -32,7 +32,7 @@ public:
 
     virtual ~RayTraceable() = default;
 
-    virtual std::optional<Hit> intersect(const Ray &r, float tMin, float tMax) const = 0;
+    [[nodiscard]] virtual std::optional<Hit> intersect(const Ray &r, float tMin, float tMax) const = 0;
 };
 
 
@@ -47,12 +47,13 @@ private:
 
 public:
 
-    Sphere(const vec3f &center, float radius) : center(center), radius(std::fmax(0.0,radius))
+    Sphere(const vec3f &center, float radius) :
+        center(center), radius(std::fmax(0.0,radius))
     {
 
     }
 
-    std::optional<Hit> intersect(const Ray &r, float tMin, float tMax) const
+    [[nodiscard]] std::optional<Hit> intersect(const Ray &r, float tMin, float tMax) const
     {
         Hit hitInfo;
 
