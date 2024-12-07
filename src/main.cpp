@@ -1,6 +1,6 @@
-#include <iostream>
-#include "vec3.h"
-#include "ray.h"
+
+#include "common.h"
+#include "scene.h"
 #include "framebuffer.h"
 
 
@@ -23,27 +23,21 @@ const auto camera_center = vec3f(0.0);
 const auto viewport_upper_left = camera_center - vec3f(0,0,focal_length) - viewport_u / 2 - viewport_v / 2;
 const auto pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
+
+
 vec3f lerp(float a, const vec3f &start, const vec3f &end)
 {
     return (static_cast<float>(1.0) - a) * start + a * end;
 }
 
-
-bool sphereIntersect(const vec3f &center, float radius, const Ray &r)
+vec3f rayColor(Ray &r, const Scene &scene)
 {
-    vec3f oc = center - r.origin;
-    auto b =  dot(oc, r.direction);
-    auto c = dot(oc, oc) - radius*radius;
+    Hit hitInfo;
 
-    auto discriminant = b*b - c;
-
-    return (discriminant >= 0);
-}
-
-vec3f rayColor(Ray &r)
-{
-    if(sphereIntersect(vec3f(0,0,-1), 0.5, r))
-        return vec3f(1.0, 0.0, 0.0);
+    if (scene.trace(r, hitInfo, 0, infinity))
+    {
+        return 0.5 * (hitInfo.normal + vec3f(1.0));
+    }
 
     float a = 0.5 * (r.direction.y + 1.0);
     return lerp(a, vec3f(1.0), vec3f(0.5, 0.7, 1.0));
@@ -51,6 +45,10 @@ vec3f rayColor(Ray &r)
 
 int main()
 {
+    Scene world;
+
+    world.add(make_shared<Sphere>(vec3f(0,0,-1), 0.5));
+    world.add(make_shared<Sphere>(vec3f(0,-100.5,-1), 100));
 
     Framebuffer buf(image_width, image_height);
 
@@ -63,12 +61,12 @@ int main()
 
             vec3f pixelPos = pixel00_loc + (pixel_delta_v * i) + (pixel_delta_u * j);
 
-            cam.direction = normalized(pixelPos - cam.origin);
-            buf.setPixel(rayColor(cam), j, i);
+            cam.direction = pixelPos - cam.origin;
+            buf.setPixel(rayColor(cam, world), j, i);
         }
     }
 
-    buf.writeToPPM("out.ppm");
+    buf.writeToPPM("./out.ppm");
 
     return 0;
 }
