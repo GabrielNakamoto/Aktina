@@ -8,7 +8,7 @@
 #include "vec3.h"
 
 
-class Framebuffer
+class FrameBuffer
 {
 private:
 
@@ -22,7 +22,7 @@ private:
 
 public:
 
-    Framebuffer(int width, int height) : width(width), height(height), m_buffer(std::make_unique<std::vector<vec3i>>(std::vector<vec3i>(width * height)))
+    FrameBuffer(int width, int height) : width(width), height(height), m_buffer(std::make_unique<std::vector<vec3i>>(std::vector<vec3i>(width * height)))
     {
 
     };
