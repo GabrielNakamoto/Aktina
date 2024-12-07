@@ -2,26 +2,9 @@
 #define RAYTRACEABLE_H
 
 #include <iostream>
-#include "ray.h"
-#include "vec3.h"
 
-struct Hit
-{
-    double t;
-    vec3f normal;
-    vec3f point;
+#include "common.h"
 
-    bool frontFace;
-
-    void setNormal(const Ray &r, const vec3f &outNormal)
-    {
-        // if they are face in the same direction this will be positive
-        // meaning the ray is coming from the back of the object
-        frontFace = dot(r.direction, outNormal) < 0;
-
-        normal = frontFace ? outNormal : -outNormal;
-    }
-};
 
 
 
@@ -29,9 +12,27 @@ class RayTraceable
 {
 public:
 
+    struct Hit
+    {
+        double t;
+        vec3f normal;
+        vec3f point;
+
+        bool frontFace;
+
+        void setNormal(const Ray &r, const vec3f &outNormal)
+        {
+            // if they are face in the same direction this will be positive
+            // meaning the ray is coming from the back of the object
+            frontFace = dot(r.direction, outNormal) < 0;
+
+            normal = frontFace ? outNormal : -outNormal;
+        }
+    };
+
     virtual ~RayTraceable() = default;
 
-    virtual bool intersect(const Ray &r, Hit &hitInfo, float tMin, float tMax) const = 0;
+    virtual std::optional<Hit> intersect(const Ray &r, float tMin, float tMax) const = 0;
 };
 
 
@@ -51,8 +52,10 @@ public:
 
     }
 
-    bool intersect(const Ray &r, Hit &hitInfo, float tMin, float tMax) const
+    std::optional<Hit> intersect(const Ray &r, float tMin, float tMax) const
     {
+        Hit hitInfo;
+
         vec3f oc = center - r.origin;
         auto a = dot(r.direction, r.direction);
         auto h = dot(oc, r.direction);
@@ -60,7 +63,7 @@ public:
 
         auto discriminant = h*h - a*c;
 
-        if(discriminant < 0) return false;
+        if(discriminant < 0) return { };
 
         discriminant = std::sqrt(discriminant);
 
@@ -70,7 +73,7 @@ public:
             // check other point
             t = (h + discriminant) / a;
             if(t <= tMin || t >= tMax)
-                return false;
+                return { };
         }
 
         hitInfo.t = t;
@@ -85,7 +88,7 @@ public:
 
         hitInfo.setNormal(r, outNormal);
 
-        return true;
+        return hitInfo;
     }
 };
 

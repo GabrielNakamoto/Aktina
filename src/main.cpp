@@ -1,4 +1,3 @@
-
 #include "common.h"
 #include "scene.h"
 #include "camera.h"

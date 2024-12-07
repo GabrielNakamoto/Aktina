@@ -2,6 +2,7 @@
 #define COMMON_H
 
 #include <iostream>
+#include <optional>
 #include <memory>
 #include <cmath>
 

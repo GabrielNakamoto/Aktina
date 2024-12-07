@@ -23,10 +23,11 @@ protected:
 
 public:
 
-    CameraBase(int imageWidth, float aspectRatio) :     imageWidth(imageWidth),
-                                                    imageHeight(imageWidth / aspectRatio),
-                                                    m_buffer(FrameBuffer(imageWidth, imageHeight)),
-                                                    aspectRatio(aspectRatio)
+    CameraBase(int imageWidth, float aspectRatio) :
+        imageWidth{ imageWidth },
+        imageHeight{ static_cast<int>(imageWidth / aspectRatio) },
+        m_buffer{ FrameBuffer(imageWidth, imageHeight) },
+        aspectRatio{ aspectRatio }
     {
 
     }
@@ -35,7 +36,7 @@ public:
     {
         initialize();
 
-        for(int pixelY = 0; pixelY < imageHeight; ++pixelY)
+        for (int pixelY = 0; pixelY < imageHeight; ++pixelY)
         {
             for (int pixelX = 0; pixelX < imageWidth; ++pixelX)
             {
@@ -96,11 +97,9 @@ private:
 
     vec3f shade(const Ray &r, const Scene &scene) const
     {
-        Hit hitInfo;
-
-        if (scene.trace(r, hitInfo, 0, infinity))
+        if (auto hitInfo = scene.trace(r, 0, infinity))
         {
-            return 0.5 * (hitInfo.normal + vec3f(1.0));
+            return 0.5 * (hitInfo.value().normal + vec3f(1.0));
         }
 
         float a = 0.5 * (r.direction.y + 1.0);

@@ -29,21 +29,26 @@ public:
         objects.push_back(object);
     }
 
-    bool trace(const Ray &r, Hit &hitInfo, float tMin, float tMax) const
+    std::optional<RayTraceable::Hit> trace(const Ray &r, float tMin, float tMax) const
     {
+        RayTraceable::Hit hitInfo;
+
         float closestHit = tMax;
         bool intersection = false;
 
         for (const auto &object : objects)
         {
-            if (object->intersect(r, hitInfo, tMin, closestHit))
+            if (auto hit = object->intersect(r, tMin, closestHit))
             {
                 intersection = true;
+                hitInfo = hit.value();
                 closestHit = hitInfo.t;
             }
         }
 
-        return intersection;
+        if(! intersection) return { };
+
+        return hitInfo;
     }
 };
 
