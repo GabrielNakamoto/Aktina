@@ -5,44 +5,31 @@
 #include "framebuffer.h"
 #include "scene.h"
 
-vec3f lerp(float a, const vec3f &start, const vec3f &end)
+class CameraBase
 {
-    return (static_cast<float>(1.0) - a) * start + a * end;
-}
+protected:
 
-class Camera
-{
-private:
-
-    int imageWidth;
-    int imageHeight;
+    int imageWidth, imageHeight;
 
     FrameBuffer m_buffer;
 
     float aspectRatio;
-
-    float viewportWidth;
-    float viewportHeight;
-
     float focalLength;
+    float viewportWidth, viewportHeight;
 
     vec3f position;
-
-    vec3f pixelDeltaRight;
-    vec3f pixelDeltaDown;
-
     vec3f originPixel;
+    vec3f pixelDeltaRight, pixelDeltaDown;
 
 public:
 
-    Camera(int imageWidth, float aspectRatio) :     imageWidth(imageWidth),
+    CameraBase(int imageWidth, float aspectRatio) :     imageWidth(imageWidth),
                                                     imageHeight(imageWidth / aspectRatio),
                                                     m_buffer(FrameBuffer(imageWidth, imageHeight)),
                                                     aspectRatio(aspectRatio)
     {
 
     }
-
 
     void render(const Scene &scene)
     {
@@ -59,6 +46,31 @@ public:
         }
 
         m_buffer.writeToPPM("./out.ppm");
+    }
+
+private:
+
+    virtual void initialize() = 0;
+    virtual vec3f shade(const Ray &r, const Scene &scene) const = 0;
+
+    Ray getRay(int pixelX, int pixelY)
+    {
+        vec3f direction = originPixel + (pixelX * pixelDeltaRight) + (pixelY * pixelDeltaDown);
+        // make direction go from camera position out
+        direction = direction - this->position;
+
+        return Ray(this->position, direction);
+    }
+};
+
+
+class Camera : public CameraBase
+{
+public:
+
+    Camera(int imageWidth, float aspectRatio) : CameraBase(imageWidth, aspectRatio)
+    {
+
     }
 
 private:
@@ -82,17 +94,6 @@ private:
         originPixel += 0.5 * (pixelDeltaRight + pixelDeltaDown);
     }
 
-
-    Ray getRay(int pixelX, int pixelY)
-    {
-        vec3f direction = originPixel + (pixelX * pixelDeltaRight) + (pixelY * pixelDeltaDown);
-        // make direction go from camera position out
-        direction = direction - this->position;
-
-        return Ray(this->position, direction);
-    }
-
-
     vec3f shade(const Ray &r, const Scene &scene) const
     {
         Hit hitInfo;
@@ -103,9 +104,13 @@ private:
         }
 
         float a = 0.5 * (r.direction.y + 1.0);
-        return lerp(a, vec3f(1.0), vec3f(0.5, 0.7, 1.0));
-    }
 
+        // lerp
+        return [&]
+        {
+            return (1.0 - a) * vec3f(1.0) + a * vec3f(0.5, 0.7, 1.0);
+        }();
+    }
 };
 
 #endif
