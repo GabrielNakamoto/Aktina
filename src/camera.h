@@ -4,6 +4,7 @@
 #include "common.h"
 #include "framebuffer.h"
 #include "scene.h"
+#include "material.h"
 
 class CameraBase
 {
@@ -63,6 +64,8 @@ public:
         }
 
         m_buffer.writeToPPM(filename);
+
+        // output how long it took, samples per pixel + info?
     }
 
 private:
@@ -105,7 +108,7 @@ private:
     {
         focalLength = 1.0;
 
-        samplesPerPixel = 10;
+        samplesPerPixel = 100;
 
         maxDepth = 10;
 
@@ -132,13 +135,10 @@ private:
         // ignore rays that are very close to surface
         if (auto hitInfo = scene.trace(r, 0.001, infinity))
         {
-            // cosine weighted ray distribution
-            // light rays closer to parallel to the normal
-            // contribute more, therefore we should send
-            // more rays in that direction
-            vec3f direction = hitInfo->normal + randomUnitVector();
-            // absorbs 50% the energy
-            return 0.5 * shade(Ray(hitInfo->point, direction), depth - 1, scene);
+            Ray scattered;
+            vec3f attenuation;
+            if(hitInfo->material->scatter(r, hitInfo.value(), attenuation, scattered))
+                return attenuation * shade(scattered, depth - 1, scene);
         }
 
         float a = 0.5 * (r.direction.y + 1.0);

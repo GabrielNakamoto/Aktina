@@ -13,10 +13,10 @@ class FrameBuffer
 private:
 
     int width, height;
-    std::unique_ptr<std::vector<vec3i>> m_buffer;
+    std::vector<vec3i> m_buffer;
 
     void printPixel(std::ostream& out, int pixel_x, int pixel_y){
-        vec3<int> pixel = (*m_buffer)[pixel_y * width + pixel_x];
+        vec3<int> pixel = m_buffer[pixel_y * width + pixel_x];
         out << pixel.x << ' ' << pixel.y << ' ' << pixel.z << '\n';
     }
 
@@ -44,7 +44,7 @@ private:
 
 public:
 
-    FrameBuffer(int width, int height) : width(width), height(height), m_buffer(std::make_unique<std::vector<vec3i>>(std::vector<vec3i>(width * height)))
+    FrameBuffer(int width, int height) : width(width), height(height), m_buffer(std::vector<vec3i>(std::vector<vec3i>(width * height)))
     {
 
     };
@@ -57,7 +57,7 @@ public:
         auto green = static_cast<int>(std::round(255.0 * correctedColor.y));
         auto blue = static_cast<int>(std::round(255.0 * correctedColor.z));
 
-        (*m_buffer)[pixel_y * width + pixel_x] = vec3i(red, green, blue);
+        m_buffer[pixel_y * width + pixel_x] = vec3i(red, green, blue);
     }
 
 

@@ -1,16 +1,26 @@
 #include "common.h"
 #include "scene.h"
 #include "camera.h"
+#include "material.h"
+#include "raytraceable.h"
 
 
 int main()
 {
+    // command line to specify filename and spp?
     Scene world;
 
-    world.add(make_shared<Sphere>(vec3f(0,0,-1), 0.5));
-    world.add(make_shared<Sphere>(vec3f(0,-100.5,-1), 100));
+    auto material_ground = make_shared<Lambertian>(vec3f(0.8, 0.8, 0.0));
+    auto material_center = make_shared<Lambertian>(vec3f(0.1, 0.2, 0.5));
+    auto material_left   = make_shared<Metal>(vec3f(0.8, 0.8, 0.8));
+    auto material_right  = make_shared<Metal>(vec3f(0.8, 0.6, 0.2));
 
-    Camera cam(800, 16.0 / 9.0);
+    world.add(make_shared<Sphere>(vec3f( 0.0, -100.5, -1.0), 100.0, material_ground));
+    world.add(make_shared<Sphere>(vec3f( 0.0,    0.0, -1.2),   0.5, material_center));
+    world.add(make_shared<Sphere>(vec3f(-1.0,    0.0, -1.0),   0.5, material_left));
+    world.add(make_shared<Sphere>(vec3f( 1.0,    0.0, -1.0),   0.5, material_right));
+
+    Camera cam(400, 16.0 / 9.0);
 
     cam.render(world, "./out.ppm");
 

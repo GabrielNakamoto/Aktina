@@ -7,9 +7,14 @@
 #include "vec3.h"
 #include "ray.h"
 
+class Material;
 
 class RayTraceable
 {
+protected:
+
+    shared_ptr<Material> material;
+
 public:
 
     struct Hit
@@ -17,6 +22,8 @@ public:
         double t;
         vec3f normal;
         vec3f point;
+
+        shared_ptr<Material> material;
 
         bool frontFace;
 
@@ -29,6 +36,10 @@ public:
             normal = frontFace ? outNormal : -outNormal;
         }
     };
+
+    RayTraceable(shared_ptr<Material> material) : material(material)
+    {
+    }
 
     virtual ~RayTraceable() = default;
 
@@ -47,13 +58,13 @@ private:
 
 public:
 
-    Sphere(const vec3f &center, float radius) :
-        center(center), radius(std::fmax(0.0,radius))
+    Sphere(const vec3f &center, float radius, shared_ptr<Material> material) :
+        center(center), radius(std::fmax(0.0,radius)), RayTraceable(material)
     {
 
     }
 
-    [[nodiscard]] std::optional<Hit> intersect(const Ray &r, float tMin, float tMax) const
+    [[nodiscard]] std::optional<Hit> intersect(const Ray &r, float tMin, float tMax) const override
     {
         Hit hitInfo;
 
@@ -79,6 +90,7 @@ public:
 
         hitInfo.t = t;
         hitInfo.point = r.at(t);
+        hitInfo.material = this->material;
 
         // this works because the vector is from the center
         // of the circle to a point on its surface, meaning

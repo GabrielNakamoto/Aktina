@@ -15,22 +15,22 @@ using std::make_shared;
 const float infinity = std::numeric_limits<float>::infinity();
 const double pi = 3.1415926535897932385;
 
-inline float toRadians(float degrees)
+[[nodiscard]] inline float toRadians(float degrees)
 {
     return degrees * pi / 180.0;
 }
 
-inline float randomFloat()
+[[nodiscard]] inline float randomFloat()
 {
     return std::rand() / (RAND_MAX + 1.0);
 }
 
-inline float randomFloat(float min, float max)
+[[nodiscard]] inline float randomFloat(float min, float max)
 {
     return min + (max - min)*randomFloat();
 }
 
-inline vec3f randomUnitVector()
+[[nodiscard]] inline vec3f randomUnitVector()
 {
     while (true)
     {
@@ -41,11 +41,9 @@ inline vec3f randomUnitVector()
     }
 }
 
-inline vec3f randomOnHemisphere(const vec3f &normal)
+[[nodiscard]] inline vec3f reflect(const vec3f &v, const vec3f &n)
 {
-    auto v = randomUnitVector();
-    return dot(v, normal) > 0 ? v : -v;
+    return v - 2*dot(v,n) * n;
 }
-
 
 #endif
