@@ -19,6 +19,7 @@ public:
 
     struct Hit
     {
+        bool hit;
         double t;
         vec3f normal;
         vec3f point;
@@ -89,6 +90,7 @@ public:
         }
 
         hitInfo.t = t;
+        hitInfo.hit = true;
         hitInfo.point = r.at(t);
         hitInfo.material = this->material;
 

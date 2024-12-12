@@ -125,7 +125,7 @@ inline vec3<T> normalized(const vec3<T> &v)
 
     if(len == 0) return ret;
 
-    double inv_len = 1 / len;
+    double inv_len = 1. / len;
 
     return (ret *= inv_len);
 }

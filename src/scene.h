@@ -32,21 +32,16 @@ public:
     [[nodiscard]] std::optional<RayTraceable::Hit> trace(const Ray &r, float tMin, float tMax) const
     {
         RayTraceable::Hit hitInfo;
-
-        float closestHit = tMax;
-        bool intersection = false;
+        hitInfo.t = tMax;
+        hitInfo.hit = false;
 
         for (const auto &object : objects)
         {
-            if (auto hit = object->intersect(r, tMin, closestHit))
-            {
-                intersection = true;
-                hitInfo = hit.value();
-                closestHit = hitInfo.t;
-            }
+            hitInfo = object->intersect(r, tMin, hitInfo.t)
+                .value_or(hitInfo);
         }
 
-        if(! intersection) return std::nullopt;
+        if(! hitInfo.hit) return std::nullopt;
 
         return hitInfo;
     }

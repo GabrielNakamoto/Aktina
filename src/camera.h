@@ -33,7 +33,8 @@ public:
 
     }
 
-    CameraBase(int imageWidth, float aspectRatio) :
+    CameraBase(int samplesPerPixel, int imageWidth, float aspectRatio) :
+        samplesPerPixel(samplesPerPixel),
         imageWidth{ imageWidth },
         imageHeight{ static_cast<int>(imageWidth / aspectRatio) },
         m_buffer{ FrameBuffer(imageWidth, imageHeight) },
@@ -52,6 +53,8 @@ public:
         {
             for (int pixelX = 0; pixelX < imageWidth; ++pixelX)
             {
+                int progress = (((float)((pixelY + 1) * imageWidth) + pixelX + 1) / (float)(imageWidth * imageHeight)) * 100;
+                std::clog << "\rRaytracing: " << progress << '%' << std::flush;
                 vec3f pixelColor(0.0);
 
                 for (int sample = 0; sample < samplesPerPixel; ++sample)
@@ -96,8 +99,8 @@ class Camera : public CameraBase
 {
 public:
 
-    Camera(int imageWidth, float aspectRatio) :
-        CameraBase(imageWidth, aspectRatio)
+    Camera(int samplesPerPixel, int imageWidth, float aspectRatio) :
+        CameraBase(samplesPerPixel, imageWidth, aspectRatio)
     {
 
     }
@@ -107,8 +110,6 @@ private:
     void initialize()
     {
         focalLength = 1.0;
-
-        samplesPerPixel = 100;
 
         maxDepth = 10;
 
@@ -139,6 +140,7 @@ private:
             vec3f attenuation;
             if(hitInfo->material->scatter(r, hitInfo.value(), attenuation, scattered))
                 return attenuation * shade(scattered, depth - 1, scene);
+            return vec3f(0);
         }
 
         float a = 0.5 * (r.direction.y + 1.0);

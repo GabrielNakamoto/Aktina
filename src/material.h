@@ -74,22 +74,23 @@ class Metal : public Material
 private:
 
     vec3f albedo;
+    float fuzz;
 
 public:
 
-    Metal(const vec3f &albedo) : albedo(albedo)
+    Metal(const vec3f &albedo, float fuzz) : albedo(albedo), fuzz(fuzz)
     {
     };
 
     [[nodiscard]] bool scatter(const Ray &incoming, const RayTraceable::Hit &hitInfo, vec3f &attentuation, Ray &scattered) const override
     {
         auto reflected = reflect(incoming.direction, hitInfo.normal);
-
+        reflected = normalized(reflected) + (fuzz * randomUnitVector());
 
         scattered = Ray(hitInfo.point, reflected);
         attentuation = albedo;
 
-        return true;
+        return (dot(scattered.direction, hitInfo.normal) > 0);
     }
 
 };
