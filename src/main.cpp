@@ -1,3 +1,6 @@
+#include <iostream>
+#include <chrono>
+
 #include "common.h"
 #include "scene.h"
 #include "camera.h"
@@ -23,7 +26,13 @@ int main(int argc, char **argv)
 
     Camera cam(spp, 400, 16.0 / 9.0);
 
+	const auto start {std::chrono::steady_clock::now()};
     cam.render(world, "./out.ppm");
+	const auto end {std::chrono::steady_clock::now()};
+
+	const std::chrono::duration<double> elapsed_seconds{end - start};
+
+	printf("\nRendered at %d SPP in %.2f seconds\n", spp, elapsed_seconds);
 
     return 0;
 }
