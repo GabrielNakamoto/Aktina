@@ -41,7 +41,8 @@ public:
                 .value_or(hitInfo);
         }
 
-        if(! hitInfo.hit) return std::nullopt;
+        if (! hitInfo.hit)
+            return std::nullopt;
 
         return hitInfo;
     }

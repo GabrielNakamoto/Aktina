@@ -15,9 +15,9 @@ public:
     vec3<T>(T x, T y, T z)  : x(x), y(y), z(z) {};
     vec3<T>(const vec3<T> &v)  : x(v.x), y(v.y), z(v.z) {};
 
-    vec3 operator-() const
+    vec3<T> operator-() const
     {
-        return vec3( -x, -y, -z );
+        return vec3<T>( -x, -y, -z );
     }
 
     vec3<T>& operator+=(const vec3<T> &v)

@@ -33,12 +33,12 @@ public:
 
     }
 
-    CameraBase(int samplesPerPixel, int imageWidth, float aspectRatio) :
-        samplesPerPixel(samplesPerPixel),
-        imageWidth{ imageWidth },
-        imageHeight{ static_cast<int>(imageWidth / aspectRatio) },
-        m_buffer{ FrameBuffer(imageWidth, imageHeight) },
-        aspectRatio{ aspectRatio }
+    CameraBase(int samplesPerPixel, int imageWidth, float aspectRatio)
+        :   imageWidth{ imageWidth }
+        ,   imageHeight{ static_cast<int>(imageWidth / aspectRatio) }
+        ,   samplesPerPixel(samplesPerPixel)
+        ,   m_buffer{ FrameBuffer(imageWidth, imageHeight) }
+        ,   aspectRatio{ aspectRatio }
     {
 
     }
@@ -99,8 +99,8 @@ class Camera : public CameraBase
 {
 public:
 
-    Camera(int samplesPerPixel, int imageWidth, float aspectRatio) :
-        CameraBase(samplesPerPixel, imageWidth, aspectRatio)
+    Camera(int samplesPerPixel, int imageWidth, float aspectRatio)
+        :   CameraBase(samplesPerPixel, imageWidth, aspectRatio)
     {
 
     }
@@ -138,8 +138,10 @@ private:
         {
             Ray scattered;
             vec3f attenuation;
-            if(hitInfo->material->scatter(r, hitInfo.value(), attenuation, scattered))
+
+            if (hitInfo->material->scatter(r, hitInfo.value(), attenuation, scattered))
                 return attenuation * shade(scattered, depth - 1, scene);
+
             return vec3f(0);
         }
 

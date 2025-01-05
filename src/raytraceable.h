@@ -59,8 +59,10 @@ private:
 
 public:
 
-    Sphere(const vec3f &center, float radius, shared_ptr<Material> material) :
-        center(center), radius(std::fmax(0.0,radius)), RayTraceable(material)
+    Sphere(const vec3f &center, float radius, shared_ptr<Material> material)
+        :   RayTraceable(material)
+        ,   center(center)
+        ,   radius(std::fmax(0.0, radius))
     {
 
     }
@@ -70,22 +72,24 @@ public:
         Hit hitInfo;
 
         vec3f oc = center - r.origin;
+
         auto a = dot(r.direction, r.direction);
         auto h = dot(oc, r.direction);
         auto c = dot(oc, oc) - radius*radius;
 
         auto discriminant = h*h - a*c;
 
-        if(discriminant < 0) return std::nullopt;
+        if (discriminant < 0)
+            return std::nullopt;
 
         discriminant = std::sqrt(discriminant);
 
         auto t = (h - discriminant) / a;
 
-        if(t <= tMin || t >= tMax){
-            // check other point
+        if (t <= tMin || t >= tMax){
             t = (h + discriminant) / a;
-            if(t <= tMin || t >= tMax)
+
+            if (t <= tMin || t >= tMax)
                 return std::nullopt;
         }
 
@@ -94,11 +98,6 @@ public:
         hitInfo.point = r.at(t);
         hitInfo.material = this->material;
 
-        // this works because the vector is from the center
-        // of the circle to a point on its surface, meaning
-        // the length of it has to be equal to the radius
-        //
-        // dividing by the radius normalizes it
         vec3f outNormal = (hitInfo.point - center) / radius;
 
         hitInfo.setNormal(r, outNormal);

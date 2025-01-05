@@ -1,0 +1,3 @@
+/Users/gabrielnakamoto/Desktop/Home/Projects/Aktina/build/CMakeFiles/aktina.dir
+/Users/gabrielnakamoto/Desktop/Home/Projects/Aktina/build/CMakeFiles/edit_cache.dir
+/Users/gabrielnakamoto/Desktop/Home/Projects/Aktina/build/CMakeFiles/rebuild_cache.dir
