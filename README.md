@@ -1,7 +1,6 @@
 # Aktina
 
-Simple raytracer written in modern C++ using the first book from [Ray Tracing in A Weekend](https://raytracing.github.io/).
-
+Very original raytracer written in modern C++ using the first book from [Ray Tracing in A Weekend](https://raytracing.github.io/).
 
 
 Fairly simple right now, planning on adding cooler things in the future when I have time such as:
