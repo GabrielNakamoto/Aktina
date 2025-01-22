@@ -11,13 +11,22 @@ void ThreadWorker::operator()()
 {
 	std::unique_lock<std::mutex> guard(scheduler->queue_mutex);
 
-	scheduler->new_job.wait(guard, [this] {
-			return this->scheduler->jobs.empty();
-	});
+	while (! this->scheduler->should_finish)
+	{
+		scheduler->new_job.wait(guard, [this] {
+				return (! this->scheduler->jobs.empty()) || (this->scheduler->should_finish);
+				});
 
-	auto job = scheduler->jobs.front();
-	scheduler->jobs.pop();
+		if (scheduler->should_finish)
+			return;
 
-	guard.unlock();
-	job();
+		auto job = scheduler->jobs.front();
+		scheduler->jobs.pop();
+
+		guard.unlock();
+		job();
+		guard.lock();
+
+		scheduler->job_end.notify_one();
+	}
 }

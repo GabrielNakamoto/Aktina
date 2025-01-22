@@ -6,6 +6,8 @@
 #include "scene.h"
 #include "material.h"
 
+#include "thread_pool.h"
+
 class CameraBase
 {
 protected:
@@ -49,22 +51,29 @@ public:
 
         float sampleWeight = 1.0 / samplesPerPixel;
 
+		ThreadPool scheduler{};
+
         for (int pixelY = 0; pixelY < imageHeight; ++pixelY)
         {
             for (int pixelX = 0; pixelX < imageWidth; ++pixelX)
             {
-                int progress = (((float)((pixelY + 1) * imageWidth) + pixelX + 1) / (float)(imageWidth * imageHeight)) * 100;
-                std::clog << "\rRaytracing: " << progress << '%' << std::flush;
-                vec3f pixelColor(0.0);
+                // int progress = (((float)((pixelY + 1) * imageWidth) + pixelX + 1) / (float)(imageWidth * imageHeight)) * 100;
+                // std::clog << "\rRaytracing: " << progress << '%' << std::flush;
 
-                for (int sample = 0; sample < samplesPerPixel; ++sample)
-                {
-                    pixelColor  += shade(getRay(pixelX, pixelY), maxDepth, scene);
-                }
+				scheduler.appendJob([this, &scene, pixelX, pixelY, sampleWeight]{
+						vec3f pixelColor(0.0);
 
-                m_buffer.setPixel(pixelColor * sampleWeight, pixelX, pixelY);
+						for (int sample = 0; sample < this->samplesPerPixel; ++sample)
+						{
+							pixelColor  += this->shade(getRay(pixelX, pixelY), maxDepth, scene);
+						}
+
+						this->m_buffer.setPixel(pixelColor * sampleWeight, pixelX, pixelY);
+				});
             }
         }
+
+		scheduler.stop();
 
         m_buffer.writeToPPM(filename);
 
