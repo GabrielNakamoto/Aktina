@@ -24,7 +24,7 @@ int main(int argc, char **argv)
     world.add(make_shared<Sphere>(vec3f(-1.0,    0.0, -1.0),   0.5, material_left));
     world.add(make_shared<Sphere>(vec3f( 1.0,    0.0, -1.0),   0.5, material_right));
 
-    Camera cam(spp, 400, 16.0 / 9.0);
+    Camera cam(spp, 800, 16.0 / 9.0);
 
 	const auto start {std::chrono::steady_clock::now()};
     cam.render(world, "./out.ppm");
