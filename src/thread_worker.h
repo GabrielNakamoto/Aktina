@@ -5,6 +5,8 @@
 #include <thread>
 #include <condition_variable>
 
+class ThreadPool;
+
 class ThreadWorker
 {
 private:

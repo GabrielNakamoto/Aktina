@@ -38,7 +38,13 @@ public:
 		// initialize threads
 		for (int i = 0; i < workerThreads; ++i)
 		{
-			threads.push_back(std::thread(ThreadWorker(this)));
+			threads.emplace_back(ThreadWorker(this));
+			/*
+			threads.emplace_back(std::thread([this]{
+				ThreadWorker worker(this);
+				worker();
+			}));
+			*/
 		}
 	}
 
