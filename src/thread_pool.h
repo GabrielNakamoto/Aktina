@@ -17,8 +17,8 @@ class ThreadPool
 friend class ThreadWorker;
 
 private:
-	std::atomic_bool should_finish;
-	std::atomic_int active_jobs{};
+	std::atomic<bool> should_finish{false};
+	std::atomic<int> active_jobs{};
 
 	std::condition_variable new_job;
 	std::condition_variable job_end;
@@ -27,7 +27,7 @@ private:
 	std::vector<std::thread> threads;
 	std::queue<std::function<void()> > jobs;
 
-	int workerThreads;
+	int n_workers;
 
 public:
 
@@ -36,10 +36,10 @@ public:
 		const unsigned int maxThreads = std::thread::hardware_concurrency();
 
 		// assume at least 2 cores?
-		workerThreads = maxThreads ? maxThreads : 2;
+		n_workers = maxThreads ? maxThreads : 2;
 
 		// initialize threads
-		for (int i = 0; i < workerThreads; ++i)
+		for (int i = 0; i < n_workers; ++i)
 		{
 			threads.emplace_back(ThreadWorker(this));
 		}
@@ -50,9 +50,10 @@ public:
 
 	void appendJob(std::function<void()> job)
 	{
-		std::lock_guard<std::mutex> guard(queue_mutex);
-
-		jobs.push(job);
+		{
+			std::lock_guard<std::mutex> guard(queue_mutex);
+			jobs.push(job);
+		}
 		new_job.notify_all();
 	}
 
@@ -63,12 +64,16 @@ public:
 		std::unique_lock<std::mutex> guard(queue_mutex);
 
 		job_end.wait(guard, [this] {
-				std::cout << "\rCurrently active jobs: " << this->active_jobs << std::flush;
 				return this->jobs.empty() && ! this->active_jobs;
 		});
 
 		should_finish = true;
 		new_job.notify_all();
+	}
+
+	[[nodiscard]] size_t workers() const
+	{
+		return n_workers;
 	}
 };
 

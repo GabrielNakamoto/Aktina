@@ -45,6 +45,7 @@ public:
 
     }
 
+	// render all function?
     void render(const Scene &scene, const std::string &filename)
     {
         initialize();
@@ -53,14 +54,22 @@ public:
 
 		ThreadPool scheduler{};
 
-        for (int pixelY = 0; pixelY < imageHeight; ++pixelY)
-        {
-            for (int pixelX = 0; pixelX < imageWidth; ++pixelX)
-            {
-                // int progress = (((float)((pixelY + 1) * imageWidth) + pixelX + 1) / (float)(imageWidth * imageHeight)) * 100;
-                // std::clog << "\rRaytracing: " << progress << '%' << std::flush;
+		// split up image vertically
+		int rowsPerWorker = imageHeight / scheduler.workers() + (imageHeight % scheduler.workers() > 0);
 
-				scheduler.appendJob([this, &scene, pixelX, pixelY, sampleWeight]{
+		// distribute work into jobs
+		int endY {};
+
+		while (endY < imageHeight)
+		{
+			int startY = endY;
+			endY = std::min(startY + rowsPerWorker, imageHeight);
+
+			scheduler.appendJob([this, &scene, startY, endY, sampleWeight]{
+				for (int pixelY = startY; pixelY < endY; ++pixelY)
+				{
+					for (int pixelX {}; pixelX < imageWidth; ++pixelX)
+					{
 						vec3f pixelColor(0.0);
 
 						for (int sample = 0; sample < this->samplesPerPixel; ++sample)
@@ -69,9 +78,11 @@ public:
 						}
 
 						this->m_buffer.setPixel(pixelColor * sampleWeight, pixelX, pixelY);
-				});
-            }
-        }
+					}
+				}
+			});
+		}
+
 
 		std::cout << "Waiting for completion..\n";
 

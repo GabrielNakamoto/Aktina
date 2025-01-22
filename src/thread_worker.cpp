@@ -33,5 +33,8 @@ void ThreadWorker::operator()()
 
 		scheduler->active_jobs--;
 		scheduler->job_end.notify_one();
+
+		if (scheduler->should_finish)
+			return;
 	}
 }
