@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(aktina VERSION 1.0)
 
-add_executable(aktina src/main.cpp)
+add_executable(aktina src/main.cpp src/thread_worker.cpp)
 
 target_compile_options(aktina PRIVATE -O2 -Wall)
 
