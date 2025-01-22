@@ -1,5 +1,8 @@
 # Aktina
 
+> [!WARNING]
+> Currently very slow due to in progress multithreading
+
 Very original raytracer written in modern C++ using the first book from [Ray Tracing in A Weekend](https://raytracing.github.io/).
 
 
