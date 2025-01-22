@@ -73,7 +73,9 @@ public:
             }
         }
 
-		scheduler.stop();
+		std::cout << "Waiting for completion..\n";
+
+		scheduler.waitForCompletion();
 
         m_buffer.writeToPPM(filename);
 

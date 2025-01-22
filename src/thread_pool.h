@@ -18,6 +18,7 @@ friend class ThreadWorker;
 
 private:
 	std::atomic_bool should_finish;
+	std::atomic_int active_jobs{};
 
 	std::condition_variable new_job;
 	std::condition_variable job_end;
@@ -32,7 +33,6 @@ public:
 
 	ThreadPool()
 	{
-		std::cout << "Initialized thread pool\n";
 		const unsigned int maxThreads = std::thread::hardware_concurrency();
 
 		// assume at least 2 cores?
@@ -43,7 +43,6 @@ public:
 		{
 			threads.emplace_back(ThreadWorker(this));
 		}
-		std::cout << "Created threads\n";
 
 		for (auto &thread : threads)
 			thread.detach();
@@ -51,7 +50,7 @@ public:
 
 	void appendJob(std::function<void()> job)
 	{
-		std::unique_lock<std::mutex> guard(queue_mutex);
+		std::lock_guard<std::mutex> guard(queue_mutex);
 
 		jobs.push(job);
 		new_job.notify_all();
@@ -63,16 +62,10 @@ public:
 	
 		std::unique_lock<std::mutex> guard(queue_mutex);
 
-		job_end.wait(guard, [this] { return ! this->queue.empty(); });
-
-		this->shutdown();
-	}
-
-private:
-
-	void shutdown()
-	{
-		std::unique_lock<std::mutex> guard(queue_mutex);
+		job_end.wait(guard, [this] {
+				std::cout << "\rCurrently active jobs: " << this->active_jobs << std::flush;
+				return this->jobs.empty() && ! this->active_jobs;
+		});
 
 		should_finish = true;
 		new_job.notify_all();

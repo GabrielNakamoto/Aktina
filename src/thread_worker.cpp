@@ -9,24 +9,29 @@ ThreadWorker::ThreadWorker(ThreadPool *parent)
 
 void ThreadWorker::operator()()
 {
-	std::unique_lock<std::mutex> guard(scheduler->queue_mutex);
 
-	while (! this->scheduler->should_finish)
+	while (true)
 	{
-		scheduler->new_job.wait(guard, [this] {
-				return (! this->scheduler->jobs.empty()) || (this->scheduler->should_finish);
-				});
+		std::function<void()> job;
 
-		if (scheduler->should_finish)
-			return;
+		{
+			std::unique_lock<std::mutex> guard(scheduler->queue_mutex);
+			scheduler->new_job.wait(guard, [this] {
+					return (! this->scheduler->jobs.empty()) || (this->scheduler->should_finish);
+			});
 
-		auto job = scheduler->jobs.front();
-		scheduler->jobs.pop();
+			if (scheduler->should_finish)
+				return;
 
-		guard.unlock();
+			job = std::move(scheduler->jobs.front());
+			scheduler->jobs.pop();
+		}
+
+		scheduler->active_jobs++;
+
 		job();
-		guard.lock();
 
+		scheduler->active_jobs--;
 		scheduler->job_end.notify_one();
 	}
 }
