@@ -7,31 +7,53 @@
 #include <queue>
 #include <condition_variable>
 
-#include "thread_worker.h"
+#include "thread_safe_queue.h"
 
 // TODO: Create thread safe queue? right now just use mutexes
 
 
 class ThreadPool
 {
-friend class ThreadWorker;
-
 private:
 	std::atomic<bool> should_finish{false};
 	std::atomic<int> active_jobs{};
 
-	std::condition_variable new_job;
-	std::condition_variable job_end;
-
-	std::mutex queue_mutex;
 	std::vector<std::thread> threads;
-	std::queue<std::function<void()> > jobs;
+	threadsafe_queue<std::function<void()> > jobs;
+
+	ThreadGuard joiner;
+
+	std::mutex finish_lock;
+	std::condition_variable job_finished;
 
 	int n_workers;
+
+void threadWorker()
+{
+	while (! should_finish)
+	{
+		std::function<void()> job;
+		if (jobs.try_pop(job))
+		{
+			active_jobs++;
+
+			job();
+
+			active_jobs--;
+
+			job_finished.notify_one();
+		}
+		else
+		{
+			std::this_thread::yield();
+		}
+	}
+}
 
 public:
 
 	ThreadPool()
+		:	joiner(threads)
 	{
 		const unsigned int maxThreads = std::thread::hardware_concurrency();
 
@@ -41,34 +63,24 @@ public:
 		// initialize threads
 		for (int i = 0; i < n_workers; ++i)
 		{
-			threads.emplace_back(ThreadWorker(this));
+			threads.emplace_back(&ThreadPool::threadWorker, this);
 		}
-
-		for (auto &thread : threads)
-			thread.detach();
 	}
 
 	void appendJob(std::function<void()> job)
 	{
-		{
-			std::lock_guard<std::mutex> guard(queue_mutex);
-			jobs.push(job);
-		}
-		new_job.notify_all();
+		jobs.push(job);
 	}
 
 	void waitForCompletion()
 	{
-		// wait until queue is empty and then stop execution
-	
-		std::unique_lock<std::mutex> guard(queue_mutex);
-
-		job_end.wait(guard, [this] {
-				return this->jobs.empty() && ! this->active_jobs;
-		});
+		while (! jobs.empty())
+		{
+			std::cout << "\rRemaining jobs: " << jobs.size() << std::flush;
+			std::this_thread::yield();
+		}
 
 		should_finish = true;
-		new_job.notify_all();
 	}
 
 	[[nodiscard]] size_t workers() const

@@ -1,6 +1,8 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include <thread>
+
 #include "common.h"
 #include "framebuffer.h"
 #include "scene.h"
@@ -52,10 +54,51 @@ public:
 
         float sampleWeight = 1.0 / samplesPerPixel;
 
+
+
+		std::vector<std::thread> threads;
+
+		const unsigned int max_threads = std::thread::hardware_concurrency();
+
+		const unsigned int n_threads = max_threads ? max_threads : 2;
+
+		int worker_rows = imageHeight / n_threads + (imageHeight % n_threads > 0);
+
+		int startY {};
+		int endY {};
+
+		for (int i = 0; i < n_threads; ++i)
+		{
+			endY = std::min(startY + worker_rows, imageHeight);
+			threads.push_back(std::thread([this, startY, endY, &sampleWeight, &scene]{
+					for (int pixelY = startY; pixelY < endY; ++pixelY)
+					{
+						for (int pixelX = 0; pixelX < imageWidth; ++pixelX)
+						{
+							vec3f pixelColor(0.0);
+
+							for (int sample = 0; sample < this->samplesPerPixel; ++sample)
+							{
+								pixelColor  += this->shade(getRay(pixelX, pixelY), maxDepth, scene);
+							}
+
+							this->m_buffer.setPixel(pixelColor * sampleWeight, pixelX, pixelY);
+						}
+					}
+			}));
+			startY += worker_rows;
+		}
+
+		for (auto &thread : threads)
+			if (thread.joinable())
+				thread.join();
+		/*
 		ThreadPool scheduler{};
 
 		// split up image vertically
-		int rowsPerWorker = imageHeight / scheduler.workers() + (imageHeight % scheduler.workers() > 0);
+		// how many jobs per worker?
+		// int rowsPerWorker = imageHeight / (scheduler.workers() * 8) + (imageHeight % (scheduler.workers() * 8) > 0);
+		int rowsPerJob = 10;
 
 		// distribute work into jobs
 		int endY {};
@@ -63,7 +106,7 @@ public:
 		while (endY < imageHeight)
 		{
 			int startY = endY;
-			endY = std::min(startY + rowsPerWorker, imageHeight);
+			endY = std::min(startY + rowsPerJob, imageHeight);
 
 			scheduler.appendJob([this, &scene, startY, endY, sampleWeight]{
 				for (int pixelY = startY; pixelY < endY; ++pixelY)
@@ -82,11 +125,9 @@ public:
 				}
 			});
 		}
+		*/
 
-
-		std::cout << "Waiting for completion..\n";
-
-		scheduler.waitForCompletion();
+		// scheduler.waitForCompletion();
 
         m_buffer.writeToPPM(filename);
 
