@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 
 	const std::chrono::duration<double> elapsed_seconds{end - start};
 
-	printf("\nRendered at %d SPP in %.2f seconds\n", spp, elapsed_seconds);
+	printf("\nRendered %d x %d image at %d SPP in %.2f seconds\n", cam.getImageWidth(), cam.getImageHeight(), spp, elapsed_seconds);
 
     return 0;
 }

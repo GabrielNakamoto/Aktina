@@ -10,17 +10,17 @@ class vec3
 public:
     T x, y, z;
 
-    vec3<T>()  : x(), y(), z() {};
-    explicit vec3<T>(T s)  : x(s), y(s), z(s) {};
-    vec3<T>(T x, T y, T z)  : x(x), y(y), z(z) {};
-    vec3<T>(const vec3<T> &v)  : x(v.x), y(v.y), z(v.z) {};
+    vec3()  : x(), y(), z() {};
+    explicit vec3(T s)  : x(s), y(s), z(s) {};
+    vec3(T x, T y, T z)  : x(x), y(y), z(z) {};
+    vec3(const vec3<T> &v)  : x(v.x), y(v.y), z(v.z) {};
 
-    vec3<T> operator-() const
+    vec3 operator-() const
     {
         return vec3<T>( -x, -y, -z );
     }
 
-    vec3<T>& operator+=(const vec3<T> &v)
+    vec3& operator+=(const vec3<T> &v)
     {
         x += v.x;
         y += v.y;
@@ -29,7 +29,7 @@ public:
         return *this;
     }
 
-    vec3<T>& operator*=(T s)
+    vec3& operator*=(T s)
     {
         x *= s;
         y *= s;
@@ -43,7 +43,7 @@ public:
         return std::sqrt(dot(*this,*this));
     }
 
-    vec3<T>& normalize()
+    vec3& normalize()
     {
         double len = this->length();
 

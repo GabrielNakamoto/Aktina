@@ -26,7 +26,7 @@ public:
 
         shared_ptr<Material> material;
 
-        bool frontFace;
+        bool frontFace {};
 
         void setNormal(const Ray &r, const vec3f &outNormal)
         {
@@ -69,7 +69,7 @@ public:
 
     [[nodiscard]] std::optional<Hit> intersect(const Ray &r, float tMin, float tMax) const override
     {
-        Hit hitInfo;
+        Hit hitInfo {};
 
         vec3f oc = center - r.origin;
 

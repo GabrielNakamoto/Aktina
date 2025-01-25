@@ -47,6 +47,16 @@ public:
 
     }
 
+	int getImageWidth()
+	{
+		return this->imageWidth;
+	}
+
+	int getImageHeight()
+	{
+		return this->imageHeight;
+	}
+
 	// render all function?
     void render(const Scene &scene, const std::string &filename)
     {
@@ -55,12 +65,15 @@ public:
         float sampleWeight = 1.0 / samplesPerPixel;
 
 
+#ifdef AKTINA_MULTHREAD
 
 		std::vector<std::thread> threads;
 
-		const unsigned int max_threads = std::thread::hardware_concurrency();
+		const int max_threads = std::thread::hardware_concurrency();
 
-		const unsigned int n_threads = max_threads ? max_threads : 2;
+		const int n_threads = max_threads ? max_threads : 2;
+
+		std::cout << "Number of threads: " << n_threads << std::endl;
 
 		int worker_rows = imageHeight / n_threads + (imageHeight % n_threads > 0);
 
@@ -92,42 +105,25 @@ public:
 		for (auto &thread : threads)
 			if (thread.joinable())
 				thread.join();
-		/*
-		ThreadPool scheduler{};
 
-		// split up image vertically
-		// how many jobs per worker?
-		// int rowsPerWorker = imageHeight / (scheduler.workers() * 8) + (imageHeight % (scheduler.workers() * 8) > 0);
-		int rowsPerJob = 10;
+#else
 
-		// distribute work into jobs
-		int endY {};
-
-		while (endY < imageHeight)
+		for (int pixelY = 0; pixelY < imageHeight; pixelY++)
 		{
-			int startY = endY;
-			endY = std::min(startY + rowsPerJob, imageHeight);
+			for (int pixelX = 0; pixelX < imageWidth; pixelX++)
+			{
+				vec3f pixelColor(0.0);
 
-			scheduler.appendJob([this, &scene, startY, endY, sampleWeight]{
-				for (int pixelY = startY; pixelY < endY; ++pixelY)
+				for (int sample = 0; sample < this->samplesPerPixel; ++sample)
 				{
-					for (int pixelX {}; pixelX < imageWidth; ++pixelX)
-					{
-						vec3f pixelColor(0.0);
-
-						for (int sample = 0; sample < this->samplesPerPixel; ++sample)
-						{
-							pixelColor  += this->shade(getRay(pixelX, pixelY), maxDepth, scene);
-						}
-
-						this->m_buffer.setPixel(pixelColor * sampleWeight, pixelX, pixelY);
-					}
+					pixelColor  += this->shade(getRay(pixelX, pixelY), maxDepth, scene);
 				}
-			});
-		}
-		*/
 
-		// scheduler.waitForCompletion();
+				this->m_buffer.setPixel(pixelColor * sampleWeight, pixelX, pixelY);
+			}
+		}
+
+#endif
 
         m_buffer.writeToPPM(filename);
 
